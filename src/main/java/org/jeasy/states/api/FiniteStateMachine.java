@@ -82,4 +82,6 @@ public interface FiniteStateMachine {
      */
     State fire(Event event) throws FiniteStateMachineException;
 
+    State evaluatePeriodic() throws FiniteStateMachineException;
+
 }

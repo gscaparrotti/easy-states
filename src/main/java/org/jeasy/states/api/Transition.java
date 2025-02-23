@@ -49,6 +49,8 @@ public interface Transition  {
      */
     State getTargetState();
 
+    Long getPeriod();
+
     /**
      * Return fired event type upon which the transition should be made.
      * @return Event type class
@@ -60,5 +62,11 @@ public interface Transition  {
      * @return transition event handler
      */
     EventHandler getEventHandler();
+
+    final class PeriodicEvent extends AbstractEvent {
+        public PeriodicEvent() {
+            super("PERIODIC_EVENT");
+        }
+    }
 
 }

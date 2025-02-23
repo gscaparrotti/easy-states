@@ -60,6 +60,9 @@ class TransitionDefinitionValidator {
         if (!finiteStateMachine.getStates().contains(targetState)) {
             throw new IllegalArgumentException("target state '" + targetState.getName() + "' is not registered in FSM states for transition '" + transitionName + "'");
         }
+        if (transition.getPeriod() != null && transition.getEventType() != Transition.PeriodicEvent.class) {
+            throw new IllegalArgumentException("Periodic event type '" + transition.getEventType().getName() + "' is not supported");
+        }
     }
 
 }

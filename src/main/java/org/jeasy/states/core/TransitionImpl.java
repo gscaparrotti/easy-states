@@ -36,6 +36,7 @@ final class TransitionImpl<E extends Event> implements Transition {
     private State targetState;
     private Class<E> eventType;
     private EventHandler<E> eventHandler;
+    private Long period;
 
     public TransitionImpl() {
         name = Utils.DEFAULT_TRANSITION_NAME;
@@ -51,6 +52,15 @@ final class TransitionImpl<E extends Event> implements Transition {
 
     public State getTargetState() {
         return targetState;
+    }
+
+    @Override
+    public Long getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(Long period) {
+        this.period = period;
     }
 
     public void setTargetState(State targetState) {

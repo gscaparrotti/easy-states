@@ -24,13 +24,14 @@
 package org.jeasy.states.core;
 
 import org.jeasy.states.api.*;
+import org.jeasy.states.api.Transition.PeriodicEvent;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-final class FiniteStateMachineImpl implements FiniteStateMachine {
+class FiniteStateMachineImpl implements FiniteStateMachine {
 
     private static final Logger LOGGER = Logger.getLogger(FiniteStateMachineImpl.class.getSimpleName());
 
@@ -41,6 +42,7 @@ final class FiniteStateMachineImpl implements FiniteStateMachine {
     private final Set<Transition> transitions;
     private Event lastEvent;
     private Transition lastTransition;
+    private Long lastTransitionTime;
 
     FiniteStateMachineImpl(final Set<State> states, final State initialState) {
         this.states = states;
@@ -55,7 +57,7 @@ final class FiniteStateMachineImpl implements FiniteStateMachine {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public final synchronized State fire(final Event event) throws FiniteStateMachineException {
+    public synchronized State fire(final Event event) throws FiniteStateMachineException {
 
         if (!finalStates.isEmpty() && finalStates.contains(currentState)) {
             LOGGER.log(Level.WARNING, "FSM is in final state '" + currentState.getName() + "', event " + event + " is ignored.");
@@ -69,30 +71,53 @@ final class FiniteStateMachineImpl implements FiniteStateMachine {
 
         for (Transition transition : transitions) {
             if (
-                    currentState.equals(transition.getSourceState()) && //fsm is in the right state as expected by transition definition
+                currentState.equals(transition.getSourceState()) && //fsm is in the right state as expected by transition definition
                     transition.getEventType().equals(event.getClass()) && //fired event type is as expected by transition definition
                     states.contains(transition.getTargetState()) //target state is defined
-                    ) {
-                try {
-                    //perform action, if any
-                    if (transition.getEventHandler() != null) {
-                        transition.getEventHandler().handleEvent(event);
-                    }
-                    //transit to target state
-                    currentState = transition.getTargetState();
+            ) {
+                processEvent(transition, event);
+                break;
+            }
+        }
+        return currentState;
+    }
 
-                    //save last triggered event and transition
-                    lastEvent = event;
-                    lastTransition = transition;
-
+    @Override
+    public State evaluatePeriodic() throws FiniteStateMachineException {
+        for (Transition transition : transitions) {
+            if (
+                currentState.equals(transition.getSourceState()) && //fsm is in the right state as expected by transition definition
+                    transition.getEventType().equals(PeriodicEvent.class) && //fired event type is as expected by transition definition
+                    states.contains(transition.getTargetState()) //target state is defined
+            ) {
+                final PeriodicEvent periodicEvent = new PeriodicEvent();
+                if (periodicEvent.getTimestamp() - lastTransitionTime > transition.getPeriod()) {
+                    processEvent(transition, periodicEvent);
                     break;
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "An exception occurred during handling event " + event + " of transition " + transition, e);
-                    throw new FiniteStateMachineException(transition, event, e);
                 }
             }
         }
         return currentState;
+    }
+
+    private void processEvent(Transition transition, Event periodicEvent) throws FiniteStateMachineException {
+        try {
+            //perform action, if any
+            if (transition.getEventHandler() != null) {
+                transition.getEventHandler().handleEvent(periodicEvent);
+            }
+            //transit to target state
+            currentState = transition.getTargetState();
+
+            //save last triggered event and transition
+            lastEvent = periodicEvent;
+            lastTransition = transition;
+            lastTransitionTime = System.currentTimeMillis();
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "An exception occurred during handling event " + periodicEvent + " of transition " + transition, e);
+            throw new FiniteStateMachineException(transition, periodicEvent, e);
+        }
     }
 
     void registerTransition(final Transition transition) {

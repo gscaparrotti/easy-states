@@ -101,6 +101,11 @@ public class TransitionBuilder {
         return this;
     }
 
+    public TransitionBuilder period(final long period) {
+        transition.setPeriod(period);
+        return this;
+    }
+
     /**
      * Build a transition instance.
      * @return a transition instance.
