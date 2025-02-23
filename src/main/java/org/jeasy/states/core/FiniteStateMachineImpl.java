@@ -91,7 +91,7 @@ class FiniteStateMachineImpl implements FiniteStateMachine {
                     states.contains(transition.getTargetState()) //target state is defined
             ) {
                 final PeriodicEvent periodicEvent = new PeriodicEvent();
-                if (periodicEvent.getTimestamp() - lastTransitionTime > transition.getPeriod()) {
+                if (lastTransitionTime != null && periodicEvent.getTimestamp() - lastTransitionTime > transition.getPeriod()) {
                     processEvent(transition, periodicEvent);
                     break;
                 }
