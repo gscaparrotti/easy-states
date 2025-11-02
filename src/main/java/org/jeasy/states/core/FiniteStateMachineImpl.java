@@ -42,7 +42,7 @@ class FiniteStateMachineImpl implements FiniteStateMachine {
     private final Set<Transition> transitions;
     private Event lastEvent;
     private Transition lastTransition;
-    private Long lastTransitionTime;
+    private Long lastTransitionTime = System.currentTimeMillis();
 
     FiniteStateMachineImpl(final Set<State> states, final State initialState) {
         this.states = states;
