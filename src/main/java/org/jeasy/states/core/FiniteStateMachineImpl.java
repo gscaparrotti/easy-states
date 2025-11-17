@@ -106,13 +106,16 @@ class FiniteStateMachineImpl implements FiniteStateMachine {
             if (transition.getEventHandler() != null) {
                 transition.getEventHandler().handleEvent(periodicEvent);
             }
+            final State previousState = currentState;
             //transit to target state
             currentState = transition.getTargetState();
 
             //save last triggered event and transition
             lastEvent = periodicEvent;
             lastTransition = transition;
-            lastTransitionTime = System.currentTimeMillis();
+            if (!previousState.equals(currentState)) {
+                lastTransitionTime = System.currentTimeMillis();
+            }
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "An exception occurred during handling event " + periodicEvent + " of transition " + transition, e);
